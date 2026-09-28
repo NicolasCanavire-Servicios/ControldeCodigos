@@ -367,18 +367,39 @@ function renderResumen() {
     document.getElementById('totalMensual').innerText = `$ ${tMes.toLocaleString('es-AR', {minimumFractionDigits:1})}`;
 }
 
-// Nueva función de descarga en Excel (.xlsx)
-// Nueva función de descarga en Excel (.xlsx) con alerta de errores
+// Función de descarga en Excel (.xlsx) con solicitud de nombre
 function exportarExcel() {
     try {
+        // 1. Pedir el nombre del operario
+        let nombreOperario = prompt("Por favor, ingresa el nombre del operario (Ej: Juan Perez):");
+        
+        // Si el usuario presiona "Cancelar" en la ventanita, detenemos la descarga
+        if (nombreOperario === null) {
+            return; 
+        }
+        
+        // Limpiamos los espacios en blanco al principio y al final
+        nombreOperario = nombreOperario.trim();
+        
+        // Si le da a "Aceptar" pero lo dejó vacío, le ponemos un nombre por defecto
+        if (nombreOperario === "") {
+            nombreOperario = "Sin_Nombre";
+        } else {
+            // Reemplazamos los espacios por guiones bajos para que el nombre del archivo quede prolijo
+            nombreOperario = nombreOperario.replace(/\s+/g, '_');
+        }
+
         const obra = document.getElementById('selObra').value;
         const tabla = document.getElementById('tableResumen');
         
-        // Convertir la tabla HTML completa (thead, tbody, tfoot) a libro de Excel
+        // Convertir la tabla HTML completa a libro de Excel
         const wb = XLSX.utils.table_to_book(tabla, { sheet: "Resumen Produccion" });
         
+        // Armar el nombre del archivo: Resumen + Mes + Obra + Nombre_Operario
+        const nombreArchivo = `Resumen_${selectedMonth}_${obra.toUpperCase()}_${nombreOperario}.xlsx`;
+        
         // Descargar el archivo nativo de Excel
-        XLSX.writeFile(wb, `Resumen_Produccion_${selectedMonth}_${obra.toUpperCase()}.xlsx`);
+        XLSX.writeFile(wb, nombreArchivo);
         
     } catch (error) {
         alert("⚠️ Error al descargar: Parece que falta la librería de Excel en tu index.html. Por favor verifica que copiaste el código correctamente.");
