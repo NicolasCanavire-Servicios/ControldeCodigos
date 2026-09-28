@@ -368,15 +368,22 @@ function renderResumen() {
 }
 
 // Nueva función de descarga en Excel (.xlsx)
+// Nueva función de descarga en Excel (.xlsx) con alerta de errores
 function exportarExcel() {
-    const obra = document.getElementById('selObra').value;
-    const tabla = document.getElementById('tableResumen');
-    
-    // Convertir la tabla HTML completa (thead, tbody, tfoot) a libro de Excel
-    const wb = XLSX.utils.table_to_book(tabla, { sheet: "Resumen Produccion" });
-    
-    // Descargar el archivo nativo de Excel
-    XLSX.writeFile(wb, `Resumen_Produccion_${selectedMonth}_${obra.toUpperCase()}.xlsx`);
+    try {
+        const obra = document.getElementById('selObra').value;
+        const tabla = document.getElementById('tableResumen');
+        
+        // Convertir la tabla HTML completa (thead, tbody, tfoot) a libro de Excel
+        const wb = XLSX.utils.table_to_book(tabla, { sheet: "Resumen Produccion" });
+        
+        // Descargar el archivo nativo de Excel
+        XLSX.writeFile(wb, `Resumen_Produccion_${selectedMonth}_${obra.toUpperCase()}.xlsx`);
+        
+    } catch (error) {
+        alert("⚠️ Error al descargar: Parece que falta la librería de Excel en tu index.html. Por favor verifica que copiaste el código correctamente.");
+        console.error("Detalle del error:", error);
+    }
 }
 
 function borrarMes() {
