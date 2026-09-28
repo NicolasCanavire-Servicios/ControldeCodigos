@@ -1,0 +1,126 @@
+<div class="table-container">
+                <table id="tableResumen">
+                    <thead id="theadResumen">
+                        <!-- Generado dinámicamente -->
+                    </thead>
+                    <tbody id="tbo<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Sistema de Control de Producción para gestión de obras y personal de Grupo Conectar.">
+    <title>Grupo Conectar - Control Producción</title>
+    
+    <!-- Librería externa para generación de PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" defer></script>
+    
+    <!-- Conexión a los estilos corporativos -->
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- Conexión a la lógica de la aplicación -->
+    <script src="script.js" defer></script>
+</head>
+<body>
+
+<main class="app-container">
+    <nav class="nav-tabs" aria-label="Navegación principal">
+        <button class="tab-btn active" id="btn-carga" aria-controls="view-carga" aria-selected="true" onclick="showTab('carga')">Carga Diaria</button>
+        <button class="tab-btn" id="btn-resumen" aria-controls="view-resumen" aria-selected="false" onclick="showTab('resumen')">Resumen Mensual</button>
+        <button class="theme-btn" id="btn-theme" onclick="toggleTheme()" aria-label="Cambiar tema" title="Alternar Modo Oscuro">🌙</button>
+    </nav>
+
+    <!-- Modal Nuevo Periodo -->
+    <dialog id="modalPeriodo" class="modal-dialog">
+        <div class="modal-content">
+            <h3>Nuevo Mes de Facturación</h3>
+            <div class="field">
+                <label for="inPeriodName">Nombre (Ej: Octubre 2026)</label>
+                <input type="text" id="inPeriodName" placeholder="Mes y Año">
+            </div>
+            <div class="field">
+                <label for="inPeriodStart">Fecha de Inicio</label>
+                <input type="date" id="inPeriodStart">
+            </div>
+            <div class="field">
+                <label for="inPeriodEnd">Fecha de Fin</label>
+                <input type="date" id="inPeriodEnd">
+            </div>
+            <div class="modal-actions">
+                <button onclick="cerrarModal()" class="btn-cancelar">Cancelar</button>
+                <button onclick="guardarPeriodo()" class="btn-guardar">Guardar Periodo</button>
+            </div>
+        </div>
+    </dialog>
+
+    <section id="view-carga" aria-labelledby="btn-carga">
+        <header class="config-bar">
+            <div class="field">
+                <label for="selPeriodo">Mes de Facturación</label>
+                <div style="display:flex; gap:10px;">
+                    <select id="selPeriodo" name="periodo" onchange="cambiarPeriodo()"></select>
+                    <button class="btn-add" onclick="abrirModal()" title="Agregar nuevo mes">+</button>
+                </div>
+            </div>
+            <div class="field">
+                <label for="selObra">Obra</label>
+                <select id="selObra" name="obra" onchange="renderCarga()">
+                    <option value="resto">OTRAS OBRAS (RESTO)</option>
+                    <option value="subestaciones">TAREAS EN SUBESTACIONES</option>
+                </select>
+            </div>
+            <div class="field">
+                <label for="selCat">Categoría</label>
+                <select id="selCat" name="categoria" onchange="renderCarga()">
+                    <option value="OFICIAL ESPECIALIZADO">OFICIAL ESPECIALIZADO</option>
+                    <option value="OFICIAL">OFICIAL</option>
+                    <option value="MEDIO Oficial">MEDIO OFICIAL</option>
+                    <option value="AYUDANTE">AYUDANTE</option>
+                </select>
+            </div>
+        </header>
+
+        <div class="carga-layout">
+            <!-- Calendario -->
+            <div class="calendar-container">
+                <h3 class="calendar-title">Selecciona un día</h3>
+                <div class="calendar-header">
+                    <div>DOM</div><div>LUN</div><div>MAR</div><div>MIE</div><div>JUE</div><div>VIE</div><div>SAB</div>
+                </div>
+                <div id="calendar-grid" class="calendar-grid"></div>
+            </div>
+
+            <!-- Formulario del día seleccionado -->
+            <div class="day-form-container" id="day-form-container">
+                <div class="empty-state">Selecciona un día en el calendario para cargar la producción.</div>
+            </div>
+        </div>
+
+        <footer class="footer-summary">
+            <button class="btn-reset" onclick="limpiarPeriodo()">BORRAR MES COMPLETO</button>
+            <div class="total-box">
+                <span class="text-label-small">TOTAL DEL MES ESTIMADO</span>
+                <div class="total-val" id="totalSemana" aria-live="polite">$ 0,00</div>
+            </div>
+        </footer>
+    </section>
+
+    <section id="view-resumen" class="hidden" aria-labelledby="btn-resumen">
+        <div id="pdf-area">
+            <header class="pdf-header">
+                <h2 class="pdf-title" id="pdf-title-text">Consolidado Mensual</h2>
+                <p id="pdf-meta" class="pdf-subtitle">Resumen de todas las semanas (incluye adicional conductor)</p>
+            </header>dyResumen"></tbody>
+                </table>
+            </div>
+            <footer class="footer-summary pdf-footer">
+                <div class="pdf-footer-text">Total Acumulado Mensual</div>
+                <div class="total-val text-success-bright" id="totalMensual" aria-live="polite">$ 0,00</div>
+            </footer>
+        </div>
+        <div class="action-panel">
+            <button class="btn-pdf" onclick="exportarPDF()">DESCARGAR PDF</button>
+        </div>
+    </section>
+</main>
+</body>
+</html>
