@@ -357,7 +357,6 @@ function renderResumen() {
         }
     });
     
-    // Agregamos el footer real a la tabla para que SheetJS lo capte al descargar el Excel
     tfoot.innerHTML = `<tr><td colspan="${currentWeek + 2}" style="text-align:right; font-weight:bold; padding: 15px;">TOTAL ACUMULADO DEL PERIODO:</td><td style="font-weight:bold; color: var(--success); font-size: 1.1rem; background-color: var(--bg-table-header)">$ ${tMes.toLocaleString('es-AR', {minimumFractionDigits:1})}</td></tr>`;
     
     const startVisual = `${String(startD.getDate()).padStart(2,'0')}/${String(startD.getMonth()+1).padStart(2,'0')}/${startD.getFullYear()}`;
@@ -367,42 +366,34 @@ function renderResumen() {
     document.getElementById('totalMensual').innerText = `$ ${tMes.toLocaleString('es-AR', {minimumFractionDigits:1})}`;
 }
 
-// Función de descarga en Excel (.xlsx) con solicitud de nombre
+// Función de descarga en Excel (.xlsx) con nombre
 function exportarExcel() {
     try {
-        // 1. Pedir el nombre del operario
         let nombreOperario = prompt("Por favor, ingresa el nombre del operario (Ej: Juan Perez):");
         
-        // Si el usuario presiona "Cancelar" en la ventanita, detenemos la descarga
         if (nombreOperario === null) {
             return; 
         }
         
-        // Limpiamos los espacios en blanco al principio y al final
         nombreOperario = nombreOperario.trim();
         
-        // Si le da a "Aceptar" pero lo dejó vacío, le ponemos un nombre por defecto
         if (nombreOperario === "") {
             nombreOperario = "Sin_Nombre";
         } else {
-            // Reemplazamos los espacios por guiones bajos para que el nombre del archivo quede prolijo
             nombreOperario = nombreOperario.replace(/\s+/g, '_');
         }
 
         const obra = document.getElementById('selObra').value;
         const tabla = document.getElementById('tableResumen');
         
-        // Convertir la tabla HTML completa a libro de Excel
         const wb = XLSX.utils.table_to_book(tabla, { sheet: "Resumen Produccion" });
         
-        // Armar el nombre del archivo: Resumen + Mes + Obra + Nombre_Operario
         const nombreArchivo = `Resumen_${selectedMonth}_${obra.toUpperCase()}_${nombreOperario}.xlsx`;
         
-        // Descargar el archivo nativo de Excel
         XLSX.writeFile(wb, nombreArchivo);
         
     } catch (error) {
-        alert("⚠️ Error al descargar: Parece que falta la librería de Excel en tu index.html. Por favor verifica que copiaste el código correctamente.");
+        alert("⚠️ Error al descargar. Es posible que falte la conexión a la librería Excel (SheetJS).");
         console.error("Detalle del error:", error);
     }
 }
