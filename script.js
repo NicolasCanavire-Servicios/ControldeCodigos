@@ -20,8 +20,8 @@ const basePrecios = {
     }
 };
 
-// Se actualiza la key para respetar la nueva estructura anidada y no pisar datos anteriores
-let db = JSON.parse(localStorage.getItem('app_prod_conectar_v4')) || {};
+// LIMPIAMOS ERRORES PREVIOS AL ACTUALIZAR A LA VERSIÓN 5
+let db = JSON.parse(localStorage.getItem('app_prod_conectar_v5')) || {};
 let selectedDate = null;
 let selectedMonth = null;
 
@@ -66,6 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function cambiarMes() {
     selectedMonth = document.getElementById('selMes').value;
+    if (!selectedMonth) return;
     selectedDate = null; 
     
     if (!db[selectedMonth]) {
@@ -83,6 +84,7 @@ function cambiarMes() {
     document.getElementById('fechaInicio').value = db[selectedMonth].config.inicio;
     document.getElementById('fechaFin').value = db[selectedMonth].config.fin;
     
+    saveDb();
     renderApp();
 }
 
@@ -97,7 +99,6 @@ function cambiarFechas() {
         db[selectedMonth].config.inicio = inicio;
         db[selectedMonth].config.fin = fin;
         
-        // Si el usuario cambia las fechas y el día que estaba seleccionado queda fuera del rango, lo deseleccionamos
         const s = parseDate(inicio);
         const e = parseDate(fin);
         if(selectedDate) {
@@ -108,6 +109,7 @@ function cambiarFechas() {
         }
         
         saveDb(); 
+        renderApp(); // <- ESTA ES LA LÍNEA QUE FALTABA PARA QUE EL CALENDARIO SE REDIBUJE AL CAMBIAR FECHAS
     }
 }
 
@@ -143,7 +145,6 @@ function renderCalendar() {
     
     const firstDayOfWeek = startD.getDay(); 
     
-    // Espacios en blanco hasta llegar al primer día de la grilla
     for (let i = 0; i < firstDayOfWeek; i++) {
         gridHtml += `<div></div>`;
     }
@@ -152,7 +153,6 @@ function renderCalendar() {
     while (d <= endD) {
         const currentStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
         const isActive = selectedDate === currentStr ? 'active' : '';
-        // Imprimimos "25/8" para mayor claridad al cruzar de mes
         gridHtml += `<button class="cal-btn ${isActive}" onclick="seleccionarDia('${currentStr}')">${d.getDate()}/${d.getMonth()+1}</button>`;
         d.setDate(d.getDate() + 1);
     }
@@ -184,7 +184,6 @@ function renderDayForm() {
     
     const dayData = db[selectedMonth].obras[obra][selectedDate];
     
-    // Formatear la vista de fecha (ej: "2026-08-25" -> "25/08/2026")
     const dObj = parseDate(selectedDate);
     const dateVisual = `${String(dObj.getDate()).padStart(2,'0')}/${String(dObj.getMonth()+1).padStart(2,'0')}/${dObj.getFullYear()}`;
     
@@ -256,7 +255,7 @@ function saveCodeQty(cod, val) {
 }
 
 function saveDb() {
-    localStorage.setItem('app_prod_conectar_v4', JSON.stringify(db));
+    localStorage.setItem('app_prod_conectar_v5', JSON.stringify(db));
     clearTimeout(window.t_u);
     window.t_u = setTimeout(() => {
         if(selectedDate) renderDayForm();
@@ -306,7 +305,6 @@ function renderResumen() {
         const currentStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
         weeks[currentWeek][currentStr] = true;
         
-        // Si es domingo (0) y no es el último día del corte, avanzamos una semana
         if (d.getDay() === 0 && d < endD) {
             currentWeek++;
             weeks[currentWeek] = {};
@@ -314,7 +312,6 @@ function renderResumen() {
         d.setDate(d.getDate() + 1);
     }
     
-    // Crear la estructura de columnas dinámicamente según la cantidad de semanas (pueden ser 5, 6, 7...)
     let theadHtml = `<tr><th class="col-code">COD</th>`;
     for(let w=0; w<=currentWeek; w++) {
         theadHtml += `<th scope="col">SEM ${w+1}</th>`;
@@ -360,7 +357,6 @@ function renderResumen() {
         }
     });
     
-    // Formato visual para subtítulo
     const startVisual = `${String(startD.getDate()).padStart(2,'0')}/${String(startD.getMonth()+1).padStart(2,'0')}/${startD.getFullYear()}`;
     const endVisual = `${String(endD.getDate()).padStart(2,'0')}/${String(endD.getMonth()+1).padStart(2,'0')}/${endD.getFullYear()}`;
     
@@ -385,7 +381,7 @@ function borrarMes() {
     if(confirm(`¿Estás seguro de borrar TODOS los datos cargados en la carpeta ${selectedMonth} para la obra ${obra.toUpperCase()}?`)) {
         if(db[selectedMonth] && db[selectedMonth].obras && db[selectedMonth].obras[obra]) {
             delete db[selectedMonth].obras[obra];
-            localStorage.setItem('app_prod_conectar_v4', JSON.stringify(db));
+            localStorage.setItem('app_prod_conectar_v5', JSON.stringify(db));
             selectedDate = null;
             renderApp();
         }
