@@ -6,7 +6,8 @@
     <meta name="description" content="Sistema de Control de Producción - Grupo Conectar">
     <title>Control Producción - Grupo Conectar</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" defer></script>
+    <!-- Librería SheetJS para generar archivos Excel (.xlsx) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer></script>
     <link rel="stylesheet" href="styles.css">
     <script src="script.js" defer></script>
 </head>
@@ -77,10 +78,9 @@
                 </header>
                 <div class="table-container">
                     <table id="tableResumen">
-                        <thead>
-                            <!-- Las columnas se generan dinámicamente según las fechas -->
-                        </thead>
+                        <thead></thead>
                         <tbody id="tbodyResumen"></tbody>
+                        <tfoot id="tfootResumen"></tfoot>
                     </table>
                 </div>
                 <footer class="footer-summary pdf-footer">
@@ -89,7 +89,7 @@
                 </footer>
             </div>
             <div class="action-panel">
-                <button class="btn-pdf" onclick="exportarPDF()">DESCARGAR PDF</button>
+                <button class="btn-excel" onclick="exportarExcel()">DESCARGAR EXCEL</button>
             </div>
         </section>
     </main>
