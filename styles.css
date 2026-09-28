@@ -1,11 +1,9 @@
 :root {
-    /* Paleta Oficial de Grupo Conectar */
-    --primary: #5e5c54;     /* Gris Institucional */
-    --accent: #fcc200;      /* Naranja Institucional */
-    --success: #279D47;     /* Verde */
-    --danger: #e01e19;      /* Rojo */
+    --primary: #5e5c54;     
+    --accent: #fcc200;      
+    --success: #279D47;     
+    --danger: #e01e19;      
     
-    /* Fondos y Estructura Base */
     --bg: #f8fafc;
     --border: #e2e8f0;
     --text-main: #333333;
@@ -81,7 +79,7 @@ body {
 
 .config-bar {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 15px;
     padding: 20px;
     background: var(--bg-panel);
@@ -97,7 +95,7 @@ body {
     text-transform: uppercase;
 }
 
-input[type="month"], select {
+input[type="month"], input[type="date"], select {
     width: 100%;
     padding: 10px;
     border: 1px solid var(--border);
@@ -107,9 +105,9 @@ input[type="month"], select {
     font-weight: 600;
     color: var(--text-main);
     outline: none;
+    box-sizing: border-box;
 }
 
-/* Layout del Calendario */
 .calendar-layout {
     display: flex;
     flex-grow: 1;
@@ -117,7 +115,7 @@ input[type="month"], select {
 }
 
 .calendar-sidebar {
-    width: 300px;
+    width: 320px;
     padding: 20px;
     border-right: 1px solid var(--border);
     background: var(--bg);
@@ -138,7 +136,7 @@ input[type="month"], select {
 }
 
 .cal-btn {
-    padding: 10px 5px;
+    padding: 10px 2px;
     border: 1px solid var(--border);
     background: var(--bg-panel);
     color: var(--text-main);
@@ -146,6 +144,7 @@ input[type="month"], select {
     border-radius: 4px;
     cursor: pointer;
     text-align: center;
+    font-size: 0.75rem;
     transition: background 0.2s;
 }
 
