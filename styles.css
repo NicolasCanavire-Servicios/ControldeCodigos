@@ -231,20 +231,9 @@ input[type="number"] {
     color: var(--text-main);
 }
 
-.btn-reset, .btn-pdf {
-    color: white;
-    border: none;
-    padding: 12px 20px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
+.btn-reset { background: var(--danger); color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: 700; }
+.btn-excel { background: #107c41; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: 700; display: flex; align-items: center; gap: 8px; width: auto;}
 
-.btn-reset { background: var(--danger); }
-.btn-pdf { background: var(--success); }
 .hidden { display: none; }
 
 .text-label-small { font-size: 0.8rem; font-weight: bold; color: var(--text-main); }
@@ -256,7 +245,7 @@ input[type="number"] {
 .pdf-footer { background: #5e5c54; color: white; }
 .pdf-footer-text { font-weight: 700; text-transform: uppercase; }
 .text-success-bright { color: #fcc200; }
-.action-panel { padding: 20px; background: var(--bg-panel); }
+.action-panel { padding: 20px; background: var(--bg-panel); display: flex; justify-content: flex-end;}
 
 .row-driver { background: rgba(252, 194, 0, 0.1); font-weight: bold; }
 .check-driver { width: 22px; height: 22px; cursor: pointer; }
@@ -267,5 +256,6 @@ input[type="number"] {
     .tab-btn { padding: 12px 5px; font-size: 0.7rem; }
     .total-val { font-size: 1.5rem; }
     .footer-summary { flex-direction: column; align-items: stretch; text-align: center; }
-    .btn-pdf, .btn-reset { justify-content: center; width: 100%; }
+    .btn-excel, .btn-reset { justify-content: center; width: 100%; }
+    .action-panel { justify-content: center; }
 }
