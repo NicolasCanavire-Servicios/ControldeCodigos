@@ -1,11 +1,11 @@
 :root {
-    /* Paleta de Grupo Conectar */
+    /* Paleta Oficial de Grupo Conectar */
     --primary: #5e5c54;     /* Gris Institucional */
     --accent: #fcc200;      /* Naranja Institucional */
     --success: #279D47;     /* Verde */
     --danger: #e01e19;      /* Rojo */
     
-    /* Fondos y Estructura */
+    /* Fondos y Estructura Base */
     --bg: #f8fafc;
     --border: #e2e8f0;
     --text-main: #333333;
@@ -14,7 +14,7 @@
 }
 
 body.dark-mode {
-    --primary: #fcc200;     /* El logo invierte color de énfasis */
+    --primary: #fcc200;
     --accent: #fcc200;
     --bg: #1a1a1a;
     --border: #333333;
@@ -106,9 +106,10 @@ input[type="month"], select {
     background-color: var(--bg);
     font-weight: 600;
     color: var(--text-main);
+    outline: none;
 }
 
-/* Layout del Calendario interactivo */
+/* Layout del Calendario */
 .calendar-layout {
     display: flex;
     flex-grow: 1;
@@ -145,6 +146,7 @@ input[type="month"], select {
     border-radius: 4px;
     cursor: pointer;
     text-align: center;
+    transition: background 0.2s;
 }
 
 .cal-btn:hover { background: var(--border); }
