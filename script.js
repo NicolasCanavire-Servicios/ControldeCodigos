@@ -20,7 +20,6 @@ const basePrecios = {
     }
 };
 
-// LIMPIAMOS ERRORES PREVIOS AL ACTUALIZAR A LA VERSIÓN 5
 let db = JSON.parse(localStorage.getItem('app_prod_conectar_v5')) || {};
 let selectedDate = null;
 let selectedMonth = null;
@@ -109,7 +108,7 @@ function cambiarFechas() {
         }
         
         saveDb(); 
-        renderApp(); // <- ESTA ES LA LÍNEA QUE FALTABA PARA QUE EL CALENDARIO SE REDIBUJE AL CAMBIAR FECHAS
+        renderApp();
     }
 }
 
@@ -288,6 +287,7 @@ function renderResumen() {
     const obra = document.getElementById('selObra').value;
     const cat = document.getElementById('selCat').value;
     const tbody = document.getElementById('tbodyResumen');
+    const tfoot = document.getElementById('tfootResumen');
     const lista = codigosObra[obra];
     
     const config = db[selectedMonth].config;
@@ -357,6 +357,9 @@ function renderResumen() {
         }
     });
     
+    // Agregamos el footer real a la tabla para que SheetJS lo capte al descargar el Excel
+    tfoot.innerHTML = `<tr><td colspan="${currentWeek + 2}" style="text-align:right; font-weight:bold; padding: 15px;">TOTAL ACUMULADO DEL PERIODO:</td><td style="font-weight:bold; color: var(--success); font-size: 1.1rem; background-color: var(--bg-table-header)">$ ${tMes.toLocaleString('es-AR', {minimumFractionDigits:1})}</td></tr>`;
+    
     const startVisual = `${String(startD.getDate()).padStart(2,'0')}/${String(startD.getMonth()+1).padStart(2,'0')}/${startD.getFullYear()}`;
     const endVisual = `${String(endD.getDate()).padStart(2,'0')}/${String(endD.getMonth()+1).padStart(2,'0')}/${endD.getFullYear()}`;
     
@@ -364,16 +367,16 @@ function renderResumen() {
     document.getElementById('totalMensual').innerText = `$ ${tMes.toLocaleString('es-AR', {minimumFractionDigits:1})}`;
 }
 
-function exportarPDF() {
-    const element = document.getElementById('pdf-area');
-    const opt = {
-        margin:       [10, 10],
-        filename:     `Resumen_Produccion_${selectedMonth}.pdf`,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
-    };
-    html2pdf().set(opt).from(element).save();
+// Nueva función de descarga en Excel (.xlsx)
+function exportarExcel() {
+    const obra = document.getElementById('selObra').value;
+    const tabla = document.getElementById('tableResumen');
+    
+    // Convertir la tabla HTML completa (thead, tbody, tfoot) a libro de Excel
+    const wb = XLSX.utils.table_to_book(tabla, { sheet: "Resumen Produccion" });
+    
+    // Descargar el archivo nativo de Excel
+    XLSX.writeFile(wb, `Resumen_Produccion_${selectedMonth}_${obra.toUpperCase()}.xlsx`);
 }
 
 function borrarMes() {
