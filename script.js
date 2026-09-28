@@ -47,7 +47,6 @@ function guardarDB() {
     localStorage.setItem('app_prod_final_v3', JSON.stringify(db));
 }
 
-// Evita problemas de zona horaria operando con los strings directamente o con UTC
 function formatearFechaVisible(fechaStr) {
     if(!fechaStr) return '';
     const [y, m, d] = fechaStr.split('-');
@@ -85,9 +84,7 @@ function cambiarPeriodo() {
     renderCarga();
 }
 
-function abrirModal() {
-    document.getElementById('modalPeriodo').showModal();
-}
+function abrirModal() { document.getElementById('modalPeriodo').showModal(); }
 
 function cerrarModal() {
     document.getElementById('modalPeriodo').close();
@@ -210,7 +207,7 @@ function renderFormularioDia() {
     const cat = document.getElementById('selCat').value;
     const listaCodigos = codigosObra[obra];
     
-    // Obtener datos del día
+    // Obtener datos del día de forma segura
     if(!db.datos[db.activo]) db.datos[db.activo] = {};
     if(!db.datos[db.activo][diaSeleccionado]) db.datos[db.activo][diaSeleccionado] = {};
     if(!db.datos[db.activo][diaSeleccionado][obra]) db.datos[db.activo][diaSeleccionado][obra] = { cond: false };
@@ -283,9 +280,9 @@ function guardarValorDia(cod, valStr) {
     guardarDB();
     clearTimeout(window.t_u);
     window.t_u = setTimeout(() => {
-        renderFormularioDia(); // Renderiza solo el formulario para no perder foco
+        renderFormularioDia(); 
         actualizarTotalMes();
-        renderCalendario(db.periodos.find(p => p.id === db.activo)); // Actualiza punto verde
+        renderCalendario(db.periodos.find(p => p.id === db.activo)); 
     }, 400);
 }
 
@@ -410,7 +407,7 @@ function limpiarPeriodo() {
     
     if (!confirmReset) {
         btn.innerText = '¿BORRAR MES? CLIC DE NUEVO';
-        btn.style.backgroundColor = 'var(--accent)';
+        btn.style.backgroundColor = 'var(--accent-hover)';
         btn.style.color = 'var(--primary)';
         confirmReset = true;
         
@@ -437,7 +434,7 @@ function limpiarPeriodo() {
     }
     
     guardarDB();
-    diaSeleccionado = null; // Resetea vista diaria
+    diaSeleccionado = null; 
     renderCarga();
     
     btn.innerText = 'BORRAR MES COMPLETO';
