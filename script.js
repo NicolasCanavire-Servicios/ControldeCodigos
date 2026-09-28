@@ -1,4 +1,4 @@
-// Base de datos (Se eliminó "Delta")
+// Bases de datos (Delta eliminada)
 const codigosObra = {
     resto: ["COD 01", "COD 02", "COD 03", "COD 04", "COD 05", "COD 06", "COD 07", "COD 09", "COD 10", "COD 12", "COD 13", "COD 15", "COD 16", "COD 17", "COD 21", "COD 22", "COD 23", "COD 25", "COD 26", "COD 28", "COD 29", "COD 31", "COD 312", "COD 313", "COD 314", "COD 33", "COD 51", "COD 61", "COD 62", "COD 63", "COD 71", "COD 92", "COD 200 (hs)","COD 220", "COD 250", "COD 1001", "COD 1007", "COD 71S", "COD 1008"],
     subestaciones: ["COD 100", "COD 1001", "COD 1001A", "COD 1003", "COD 1004", "COD 1005", "COD 1006", "COD 1007", "COD 1008", "COD 1009", "COD 1010", "COD 1011", "COD 1012", "COD 1013", "COD 1014", "COD 1015", "COD 1016", "COD 1017", "COD 1018", "COD 1020", "COD 1021", "COD 1021 A", "COD 1021 B", "COD 110", "COD 111", "COD 112", "COD 113", "COD 20", "COD 200", "COD 200 (hs)", "COD 200L", "COD 21", "COD 250", "COD 701", "COD 702"]
@@ -21,11 +21,12 @@ const basePrecios = {
     }
 };
 
-// Lógica de Estado y Persistencia
+// Variables de Estado
 let db = JSON.parse(localStorage.getItem('app_prod_conectar_v3')) || {};
 let selectedDate = null;
 let selectedMonth = null;
 
+// Funciones principales
 function toggleTheme() {
     document.body.classList.toggle('dark-mode');
     const isDark = document.body.classList.contains('dark-mode');
@@ -39,7 +40,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('btn-theme').innerText = '☀️';
     }
     
-    // Mes actual por defecto
     const today = new Date();
     selectedMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
     document.getElementById('selMes').value = selectedMonth;
@@ -120,7 +120,7 @@ function renderDayForm() {
     const dayData = db[selectedMonth][obra][selectedDate];
     
     let html = `
-    <h3 class="text-label-small" style="margin-bottom: 15px; font-size:1rem; color:var(--accent)">Carga: ${selectedDate}</h3>
+    <h3 class="text-label-small" style="margin-bottom: 15px; font-size:1rem; color:var(--accent)">Carga del día: ${selectedDate}</h3>
     <label class="row-driver" style="display:flex; align-items:center; gap:10px; padding:10px; border-radius:6px; margin-bottom:15px; cursor:pointer;">
         <input type="checkbox" class="check-driver" ${dayData.conductor ? 'checked' : ''} onchange="saveConductor(this.checked)">
         <span>¿Conductor en este día? (Suma adicional a todo lo cargado hoy)</span>
@@ -284,7 +284,7 @@ function exportarPDF() {
     const element = document.getElementById('pdf-area');
     const opt = {
         margin:       [10, 10],
-        filename:     `Resumen_${selectedMonth}.pdf`,
+        filename:     `Resumen_Produccion_${selectedMonth}.pdf`,
         image:        { type: 'jpeg', quality: 0.98 },
         html2canvas:  { scale: 2, useCORS: true },
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
@@ -294,7 +294,7 @@ function exportarPDF() {
 
 function borrarMes() {
     const obra = document.getElementById('selObra').value;
-    if(confirm(`¿Estás seguro de borrar todos los datos de ${selectedMonth} para la obra ${obra.toUpperCase()}?`)) {
+    if(confirm(`¿Estás seguro de borrar TODOS los datos cargados en el mes de ${selectedMonth} para la obra ${obra.toUpperCase()}?`)) {
         if(db[selectedMonth] && db[selectedMonth][obra]) {
             delete db[selectedMonth][obra];
             localStorage.setItem('app_prod_conectar_v3', JSON.stringify(db));
