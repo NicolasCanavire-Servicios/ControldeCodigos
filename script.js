@@ -1,3 +1,4 @@
+// Base de datos (Se eliminó "Delta")
 const codigosObra = {
     resto: ["COD 01", "COD 02", "COD 03", "COD 04", "COD 05", "COD 06", "COD 07", "COD 09", "COD 10", "COD 12", "COD 13", "COD 15", "COD 16", "COD 17", "COD 21", "COD 22", "COD 23", "COD 25", "COD 26", "COD 28", "COD 29", "COD 31", "COD 312", "COD 313", "COD 314", "COD 33", "COD 51", "COD 61", "COD 62", "COD 63", "COD 71", "COD 92", "COD 200 (hs)","COD 220", "COD 250", "COD 1001", "COD 1007", "COD 71S", "COD 1008"],
     subestaciones: ["COD 100", "COD 1001", "COD 1001A", "COD 1003", "COD 1004", "COD 1005", "COD 1006", "COD 1007", "COD 1008", "COD 1009", "COD 1010", "COD 1011", "COD 1012", "COD 1013", "COD 1014", "COD 1015", "COD 1016", "COD 1017", "COD 1018", "COD 1020", "COD 1021", "COD 1021 A", "COD 1021 B", "COD 110", "COD 111", "COD 112", "COD 113", "COD 20", "COD 200", "COD 200 (hs)", "COD 200L", "COD 21", "COD 250", "COD 701", "COD 702"]
@@ -20,120 +21,83 @@ const basePrecios = {
     }
 };
 
-let db = JSON.parse(localStorage.getItem('app_prod_final_v3')) || {
-    periodos: [], // Ej: { id: 'p1', name: 'Octubre 2026', start: '2026-10-01', end: '2026-10-31' }
-    activo: null, // ID del periodo seleccionado
-    datos: {}     // Ej: { 'p1': { '2026-10-05': { 'resto': { 'COD 01': 5, 'cond': true } } } }
-};
+// Lógica de Estado y Persistencia
+let db = JSON.parse(localStorage.getItem('app_prod_conectar_v3')) || {};
+let selectedDate = null;
+let selectedMonth = null;
 
-let diaSeleccionado = null; // Guarda la fecha en formato YYYY-MM-DD
-
-// Inicializa con un mes de prueba si está vacío
-if (db.periodos.length === 0) {
-    let now = new Date();
-    let y = now.getFullYear();
-    let m = String(now.getMonth() + 1).padStart(2, '0');
-    let start = `${y}-${m}-01`;
-    let end = new Date(y, now.getMonth() + 1, 0).toISOString().split('T')[0]; // Último día del mes
-    
-    let defaultPeriod = { id: 'p_' + Date.now(), name: `Mes Actual (${m}/${y})`, start, end };
-    db.periodos.push(defaultPeriod);
-    db.activo = defaultPeriod.id;
-    db.datos[defaultPeriod.id] = {};
-    guardarDB();
+function toggleTheme() {
+    document.body.classList.toggle('dark-mode');
+    const isDark = document.body.classList.contains('dark-mode');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    document.getElementById('btn-theme').innerText = isDark ? '☀️' : '🌙';
 }
 
-function guardarDB() {
-    localStorage.setItem('app_prod_final_v3', JSON.stringify(db));
-}
-
-function formatearFechaVisible(fechaStr) {
-    if(!fechaStr) return '';
-    const [y, m, d] = fechaStr.split('-');
-    return `${d}/${m}/${y}`;
-}
-
-function obtenerDiasEnRango(startStr, endStr) {
-    let dates = [];
-    let current = new Date(startStr + "T12:00:00");
-    let end = new Date(endStr + "T12:00:00");
-    
-    while (current <= end) {
-        dates.push(current.toISOString().split('T')[0]);
-        current.setDate(current.getDate() + 1);
+document.addEventListener('DOMContentLoaded', () => {
+    if (localStorage.getItem('theme') === 'dark') {
+        document.body.classList.add('dark-mode');
+        document.getElementById('btn-theme').innerText = '☀️';
     }
-    return dates;
-}
-
-function cargarSelectPeriodos() {
-    const sel = document.getElementById('selPeriodo');
-    sel.innerHTML = '';
-    db.periodos.forEach(p => {
-        let opt = document.createElement('option');
-        opt.value = p.id;
-        opt.innerText = p.name;
-        if(p.id === db.activo) opt.selected = true;
-        sel.appendChild(opt);
-    });
-}
-
-function cambiarPeriodo() {
-    db.activo = document.getElementById('selPeriodo').value;
-    diaSeleccionado = null; // Resetea la vista diaria al cambiar de mes
-    guardarDB();
-    renderCarga();
-}
-
-function abrirModal() { document.getElementById('modalPeriodo').showModal(); }
-
-function cerrarModal() {
-    document.getElementById('modalPeriodo').close();
-    document.getElementById('inPeriodName').value = '';
-    document.getElementById('inPeriodStart').value = '';
-    document.getElementById('inPeriodEnd').value = '';
-}
-
-function guardarPeriodo() {
-    const name = document.getElementById('inPeriodName').value;
-    const start = document.getElementById('inPeriodStart').value;
-    const end = document.getElementById('inPeriodEnd').value;
     
-    if(!name || !start || !end) {
-        alert("Completa todos los campos");
-        return;
-    }
-    if(start > end) {
-        alert("La fecha de inicio debe ser anterior al fin");
-        return;
-    }
-
-    let newId = 'p_' + Date.now();
-    db.periodos.push({ id: newId, name, start, end });
-    db.activo = newId;
-    db.datos[newId] = {};
-    guardarDB();
+    // Mes actual por defecto
+    const today = new Date();
+    selectedMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+    document.getElementById('selMes').value = selectedMonth;
     
-    cargarSelectPeriodos();
-    cerrarModal();
-    diaSeleccionado = null;
-    renderCarga();
+    renderApp();
+});
+
+function cambiarMes() {
+    selectedMonth = document.getElementById('selMes').value;
+    selectedDate = null; 
+    renderApp();
 }
 
 function showTab(tab) {
     document.getElementById('view-carga').classList.toggle('hidden', tab !== 'carga');
     document.getElementById('view-resumen').classList.toggle('hidden', tab !== 'resumen');
     
-    const btnCarga = document.getElementById('btn-carga');
-    const btnResumen = document.getElementById('btn-resumen');
+    document.getElementById('btn-carga').classList.toggle('active', tab === 'carga');
+    document.getElementById('btn-resumen').classList.toggle('active', tab === 'resumen');
     
-    btnCarga.classList.toggle('active', tab === 'carga');
-    btnCarga.setAttribute('aria-selected', tab === 'carga');
-    
-    btnResumen.classList.toggle('active', tab === 'resumen');
-    btnResumen.setAttribute('aria-selected', tab === 'resumen');
+    if (tab === 'resumen') renderResumen();
+}
 
-    if(tab === 'resumen') renderResumen();
-    else renderCarga();
+function renderApp() {
+    renderCalendar();
+    if (selectedDate) {
+        renderDayForm();
+    } else {
+        document.getElementById('daily-form-container').innerHTML = '<p class="text-label-small" style="padding: 20px;">Selecciona un día en el calendario para cargar la producción.</p>';
+    }
+    calculateMonthTotal();
+}
+
+function renderCalendar() {
+    if (!selectedMonth) return;
+    const [year, month] = selectedMonth.split('-');
+    const daysInMonth = new Date(year, month, 0).getDate();
+    
+    let gridHtml = '<div class="cal-day-header">DOM</div><div class="cal-day-header">LUN</div><div class="cal-day-header">MAR</div><div class="cal-day-header">MIE</div><div class="cal-day-header">JUE</div><div class="cal-day-header">VIE</div><div class="cal-day-header">SAB</div>';
+    
+    const firstDay = new Date(year, month - 1, 1).getDay(); 
+    
+    for (let i = 0; i < firstDay; i++) {
+        gridHtml += `<div></div>`;
+    }
+    
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = `${selectedMonth}-${String(day).padStart(2, '0')}`;
+        const isActive = selectedDate === dateStr ? 'active' : '';
+        gridHtml += `<button class="cal-btn ${isActive}" onclick="seleccionarDia('${dateStr}')">${day}</button>`;
+    }
+    
+    document.getElementById('calendar-grid').innerHTML = gridHtml;
+}
+
+function seleccionarDia(dateStr) {
+    selectedDate = dateStr;
+    renderApp();
 }
 
 function getPrecio(obra, cat, cod) {
@@ -143,257 +107,184 @@ function getPrecio(obra, cat, cod) {
     return 0;
 }
 
-function renderCarga() {
-    const periodoActivo = db.periodos.find(p => p.id === db.activo);
-    if(!periodoActivo) return;
-
-    renderCalendario(periodoActivo);
-    renderFormularioDia();
-    actualizarTotalMes();
-}
-
-function renderCalendario(periodo) {
-    const grid = document.getElementById('calendar-grid');
-    grid.innerHTML = '';
-    
-    const fechas = obtenerDiasEnRango(periodo.start, periodo.end);
-    if(fechas.length === 0) return;
-
-    // Rellenar espacios vacíos si el mes no empieza en domingo
-    let firstDate = new Date(fechas[0] + "T12:00:00");
-    let startDayOfWeek = firstDate.getDay(); // 0 (Dom) a 6 (Sab)
-    
-    for(let i = 0; i < startDayOfWeek; i++) {
-        let empty = document.createElement('div');
-        empty.className = 'cal-day empty';
-        grid.appendChild(empty);
-    }
-
-    // Renderizar días reales
-    const obra = document.getElementById('selObra').value;
-    const datosPeriodo = db.datos[db.activo] || {};
-
-    fechas.forEach(fecha => {
-        let cell = document.createElement('div');
-        cell.className = 'cal-day';
-        if(fecha === diaSeleccionado) cell.classList.add('selected');
-        
-        // Verificar si hay datos cargados para este día en la obra actual
-        if(datosPeriodo[fecha] && datosPeriodo[fecha][obra]) {
-            let info = datosPeriodo[fecha][obra];
-            let tieneValores = Object.keys(info).some(k => k !== 'cond' && info[k] > 0);
-            if(tieneValores || info.cond) cell.classList.add('has-data');
-        }
-
-        const dNum = fecha.split('-')[2];
-        cell.innerText = parseInt(dNum); // Quita ceros a la izquierda
-        cell.onclick = () => {
-            diaSeleccionado = fecha;
-            renderCarga();
-        };
-        grid.appendChild(cell);
-    });
-}
-
-function renderFormularioDia() {
-    const container = document.getElementById('day-form-container');
-    
-    if(!diaSeleccionado) {
-        container.innerHTML = '<div class="empty-state">Selecciona un día en el calendario para cargar la producción.</div>';
-        return;
-    }
-
+function renderDayForm() {
     const obra = document.getElementById('selObra').value;
     const cat = document.getElementById('selCat').value;
-    const listaCodigos = codigosObra[obra];
+    const container = document.getElementById('daily-form-container');
+    const lista = codigosObra[obra];
     
-    // Obtener datos del día de forma segura
-    if(!db.datos[db.activo]) db.datos[db.activo] = {};
-    if(!db.datos[db.activo][diaSeleccionado]) db.datos[db.activo][diaSeleccionado] = {};
-    if(!db.datos[db.activo][diaSeleccionado][obra]) db.datos[db.activo][diaSeleccionado][obra] = { cond: false };
+    if(!db[selectedMonth]) db[selectedMonth] = {};
+    if(!db[selectedMonth][obra]) db[selectedMonth][obra] = {};
+    if(!db[selectedMonth][obra][selectedDate]) db[selectedMonth][obra][selectedDate] = { conductor: false, codes: {} };
     
-    const infoDia = db.datos[db.activo][diaSeleccionado][obra];
-
+    const dayData = db[selectedMonth][obra][selectedDate];
+    
     let html = `
-        <div class="day-form-header">
-            <h3>Carga del: ${formatearFechaVisible(diaSeleccionado)}</h3>
-            <label class="day-driver-check">
-                ¿Conductor? 
-                <input type="checkbox" id="check-driver-day" ${infoDia.cond ? 'checked' : ''} onchange="guardarConductorDia(this.checked)" style="width:18px; height:18px; accent-color: var(--accent);">
-            </label>
-        </div>
-        <table>
-            <thead>
-                <tr>
-                    <th class="col-code">CÓDIGO</th>
-                    <th>UNIDADES</th>
-                    <th>SUBTOTAL $</th>
-                </tr>
-            </thead>
-            <tbody>
+    <h3 class="text-label-small" style="margin-bottom: 15px; font-size:1rem; color:var(--accent)">Carga: ${selectedDate}</h3>
+    <label class="row-driver" style="display:flex; align-items:center; gap:10px; padding:10px; border-radius:6px; margin-bottom:15px; cursor:pointer;">
+        <input type="checkbox" class="check-driver" ${dayData.conductor ? 'checked' : ''} onchange="saveConductor(this.checked)">
+        <span>¿Conductor en este día? (Suma adicional a todo lo cargado hoy)</span>
+    </label>
+    <table>
+        <thead>
+            <tr>
+                <th class="col-code">CÓDIGO</th>
+                <th>CANTIDAD</th>
+                <th>SUBTOTAL $</th>
+            </tr>
+        </thead>
+        <tbody>
     `;
-
-    let totalDia = 0;
     
-    listaCodigos.forEach(cod => {
-        let prBase = getPrecio(obra, cat, cod);
-        let prCond = getPrecio(obra, "Adic. Cond.", cod);
-        let val = Number(infoDia[cod] || 0);
-        let pagoRow = val * prBase;
-        if(infoDia.cond) pagoRow += (val * prCond);
+    let totalDay = 0;
+    
+    lista.forEach(cod => {
+        const prBase = getPrecio(obra, cat, cod);
+        const prCond = getPrecio(obra, "Adic. Cond.", cod);
+        const qty = dayData.codes[cod] || '';
+        const qtyNum = Number(qty) || 0;
         
-        totalDia += pagoRow;
-
+        const subtotal = (qtyNum * prBase) + (dayData.conductor ? qtyNum * prCond : 0);
+        totalDay += subtotal;
+        
         html += `
             <tr>
                 <td class="col-code">${cod}</td>
-                <td><input type="number" min="0" value="${val || ''}" oninput="guardarValorDia('${cod}', this.value)" style="width: 80px;"></td>
-                <td class="subtotal-col">$ ${pagoRow.toLocaleString('es-AR', {minimumFractionDigits:1})}</td>
+                <td><input type="number" min="0" value="${qty}" oninput="saveCodeQty('${cod}', this.value)"></td>
+                <td class="subtotal-col">$ ${subtotal.toLocaleString('es-AR', {minimumFractionDigits:1})}</td>
             </tr>
         `;
     });
-
+    
     html += `
-            </tbody>
-            <tfoot class="tfoot-totals">
-                <tr>
-                    <td class="label-total-dia" colspan="2" style="text-align:right;">TOTAL DEL DÍA:</td>
-                    <td class="day-money" style="font-size:1.1rem; font-weight:900;">$ ${totalDia.toLocaleString('es-AR', {minimumFractionDigits:1})}</td>
-                </tr>
-            </tfoot>
-        </table>
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="2" style="text-align:right; font-weight:bold; padding:10px; border-bottom:none;">TOTAL DEL DÍA:</td>
+                <td style="font-weight:bold; color:var(--success); font-size:1.1rem; border-bottom:none;">$ ${totalDay.toLocaleString('es-AR', {minimumFractionDigits:1})}</td>
+            </tr>
+        </tfoot>
+    </table>
     `;
-
+    
     container.innerHTML = html;
 }
 
-function guardarValorDia(cod, valStr) {
-    let val = Number(valStr);
+function saveConductor(isChecked) {
     const obra = document.getElementById('selObra').value;
-    
-    if(val <= 0) {
-        delete db.datos[db.activo][diaSeleccionado][obra][cod];
+    db[selectedMonth][obra][selectedDate].conductor = isChecked;
+    saveDb();
+}
+
+function saveCodeQty(cod, val) {
+    const obra = document.getElementById('selObra').value;
+    if(val === '' || val === '0') {
+        delete db[selectedMonth][obra][selectedDate].codes[cod];
     } else {
-        db.datos[db.activo][diaSeleccionado][obra][cod] = val;
+        db[selectedMonth][obra][selectedDate].codes[cod] = val;
     }
-    
-    guardarDB();
+    saveDb();
+}
+
+function saveDb() {
+    localStorage.setItem('app_prod_conectar_v3', JSON.stringify(db));
     clearTimeout(window.t_u);
     window.t_u = setTimeout(() => {
-        renderFormularioDia(); 
-        actualizarTotalMes();
-        renderCalendario(db.periodos.find(p => p.id === db.activo)); 
-    }, 400);
+        if(selectedDate) renderDayForm();
+        calculateMonthTotal();
+    }, 300);
 }
 
-function guardarConductorDia(isCond) {
-    const obra = document.getElementById('selObra').value;
-    db.datos[db.activo][diaSeleccionado][obra].cond = isCond;
-    guardarDB();
-    renderFormularioDia();
-    actualizarTotalMes();
-}
-
-function actualizarTotalMes() {
+function calculateMonthTotal() {
+    if (!selectedMonth) return;
     const obra = document.getElementById('selObra').value;
     const cat = document.getElementById('selCat').value;
-    const datosActivos = db.datos[db.activo] || {};
+    
     let totalMes = 0;
-
-    Object.keys(datosActivos).forEach(fecha => {
-        let infoDia = datosActivos[fecha][obra];
-        if(infoDia) {
-            let isCond = infoDia.cond === true;
-            Object.keys(infoDia).forEach(cod => {
-                if(cod !== 'cond') {
-                    let val = Number(infoDia[cod]);
-                    let pBase = getPrecio(obra, cat, cod);
-                    let pCond = getPrecio(obra, "Adic. Cond.", cod);
-                    totalMes += (val * pBase) + (isCond ? val * pCond : 0);
-                }
-            });
+    if(db[selectedMonth] && db[selectedMonth][obra]) {
+        const monthData = db[selectedMonth][obra];
+        for (const [date, dayData] of Object.entries(monthData)) {
+            for (const [cod, qtyStr] of Object.entries(dayData.codes)) {
+                const prBase = getPrecio(obra, cat, cod);
+                const prCond = getPrecio(obra, "Adic. Cond.", cod);
+                const qtyNum = Number(qtyStr) || 0;
+                totalMes += (qtyNum * prBase) + (dayData.conductor ? qtyNum * prCond : 0);
+            }
         }
-    });
-
-    document.getElementById('totalSemana').innerText = `$ ${totalMes.toLocaleString('es-AR', {minimumFractionDigits:1})}`;
+    }
+    document.getElementById('totalMesResumen').innerText = `$ ${totalMes.toLocaleString('es-AR', {minimumFractionDigits:1})}`;
 }
 
 function renderResumen() {
+    if (!selectedMonth) return;
     const obra = document.getElementById('selObra').value;
     const cat = document.getElementById('selCat').value;
-    const periodo = db.periodos.find(p => p.id === db.activo);
-    if(!periodo) return;
-
-    document.getElementById('pdf-title-text').innerText = `Consolidado: ${periodo.name}`;
-
-    const fechas = obtenerDiasEnRango(periodo.start, periodo.end);
-    // Dividir las fechas del mes en bloques de 7 días (S1, S2, etc.)
-    const semanas = [];
-    for(let i=0; i < fechas.length; i+=7) {
-        semanas.push(fechas.slice(i, i+7));
-    }
-
-    const thead = document.getElementById('theadResumen');
-    let hRow = `<tr><th class="col-code">COD</th>`;
-    semanas.forEach((s, idx) => hRow += `<th scope="col">SEM ${idx+1}</th>`);
-    hRow += `<th class="bg-light-gray" scope="col">TOTAL U.</th><th class="bg-success-light" scope="col">MONTO $</th></tr>`;
-    thead.innerHTML = hRow;
-
     const tbody = document.getElementById('tbodyResumen');
+    const lista = codigosObra[obra];
+    
+    const [year, month] = selectedMonth.split('-');
+    const daysInMonth = new Date(year, month, 0).getDate();
+    const weeks = [{}, {}, {}, {}, {}, {}]; 
+    
+    let currentWeek = 0;
+    for (let day = 1; day <= daysInMonth; day++) {
+        const d = new Date(year, month - 1, day);
+        const dateStr = `${selectedMonth}-${String(day).padStart(2, '0')}`;
+        
+        weeks[currentWeek][dateStr] = true;
+        if (d.getDay() === 0 && day !== daysInMonth) { 
+            currentWeek++;
+        }
+    }
+    
+    let tMes = 0;
     tbody.innerHTML = "";
     
-    const lista = codigosObra[obra];
-    const datos = db.datos[db.activo] || {};
-    let granTotal = 0;
+    const monthData = (db[selectedMonth] && db[selectedMonth][obra]) ? db[selectedMonth][obra] : {};
 
     lista.forEach(cod => {
-        let totalU_Mes = 0;
-        let totalMonto_Mes = 0;
-        let rowHtml = `<td class="col-code">${cod}</td>`;
-        let prBase = getPrecio(obra, cat, cod);
-        let prCond = getPrecio(obra, "Adic. Cond.", cod);
-
-        semanas.forEach(bloqueSemana => {
-            let uSemana = 0;
-            let montoSemana = 0;
+        let uMes = 0;
+        let subtotalCodMes = 0;
+        const prBase = getPrecio(obra, cat, cod);
+        const prCond = getPrecio(obra, "Adic. Cond.", cod);
+        
+        let rowH = `<td class="col-code">${cod}</td>`;
+        
+        for(let w=0; w<6; w++) {
+            let uS = 0;
+            let subS = 0;
             
-            bloqueSemana.forEach(fecha => {
-                let infoDia = datos[fecha]?.[obra];
-                if(infoDia && infoDia[cod]) {
-                    let val = Number(infoDia[cod]);
-                    let esCond = infoDia.cond === true;
-                    uSemana += val;
-                    montoSemana += (val * prBase) + (esCond ? val * prCond : 0);
+            Object.keys(weeks[w]).forEach(dateStr => {
+                if(monthData[dateStr] && monthData[dateStr].codes[cod]) {
+                    const qtyNum = Number(monthData[dateStr].codes[cod]) || 0;
+                    const isCond = monthData[dateStr].conductor;
+                    uS += qtyNum;
+                    subS += (qtyNum * prBase) + (isCond ? qtyNum * prCond : 0);
                 }
             });
+            
+            uMes += uS;
+            subtotalCodMes += subS;
+            rowH += `<td>${uS > 0 ? uS : '-'}</td>`;
+        }
 
-            totalU_Mes += uSemana;
-            totalMonto_Mes += montoSemana;
-            rowHtml += `<td>${uSemana > 0 ? uSemana : '-'}</td>`;
-        });
-
-        if(totalU_Mes > 0) {
-            granTotal += totalMonto_Mes;
+        if(uMes > 0) {
+            tMes += subtotalCodMes;
             let tr = document.createElement('tr');
-            tr.innerHTML = rowHtml + `
-                <td class="bg-light-gray" style="font-weight:bold;">${totalU_Mes}</td>
-                <td class="subtotal-col bg-success-light">$ ${totalMonto_Mes.toLocaleString('es-AR', {minimumFractionDigits:1})}</td>
-            `;
+            tr.innerHTML = rowH + `<td class="bg-light-gray" style="font-weight:bold;">${uMes}</td><td class="subtotal-col bg-success-light">$ ${subtotalCodMes.toLocaleString('es-AR', {minimumFractionDigits:1})}</td>`;
             tbody.appendChild(tr);
         }
     });
-
-    document.getElementById('totalMensual').innerText = `$ ${granTotal.toLocaleString('es-AR', {minimumFractionDigits:1})}`;
+    
+    document.getElementById('pdf-meta').innerText = `Resumen de: ${selectedMonth} | Obra: ${obra.toUpperCase()} | Categoría: ${cat}`;
+    document.getElementById('totalMensual').innerText = `$ ${tMes.toLocaleString('es-AR', {minimumFractionDigits:1})}`;
 }
 
 function exportarPDF() {
     const element = document.getElementById('pdf-area');
-    const periodo = db.periodos.find(p => p.id === db.activo);
-    let nombreMes = periodo ? periodo.name.replace(/\s+/g, '_') : 'Mes';
-    
     const opt = {
         margin:       [10, 10],
-        filename:     `Resumen_Produccion_${nombreMes}.pdf`,
+        filename:     `Resumen_${selectedMonth}.pdf`,
         image:        { type: 'jpeg', quality: 0.98 },
         html2canvas:  { scale: 2, useCORS: true },
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
@@ -401,61 +292,14 @@ function exportarPDF() {
     html2pdf().set(opt).from(element).save();
 }
 
-let confirmReset = false;
-function limpiarPeriodo() {
-    const btn = document.querySelector('.btn-reset');
-    
-    if (!confirmReset) {
-        btn.innerText = '¿BORRAR MES? CLIC DE NUEVO';
-        btn.style.backgroundColor = 'var(--accent-hover)';
-        btn.style.color = 'var(--primary)';
-        confirmReset = true;
-        
-        setTimeout(() => { 
-            if(confirmReset) {
-                confirmReset = false; 
-                btn.innerText = 'BORRAR MES COMPLETO'; 
-                btn.style.backgroundColor = 'var(--danger)';
-                btn.style.color = 'white';
-            }
-        }, 3000);
-        return;
-    }
-    
+function borrarMes() {
     const obra = document.getElementById('selObra').value;
-    
-    // Solo borra la obra actual del periodo activo
-    if(db.datos[db.activo]) {
-        Object.keys(db.datos[db.activo]).forEach(fecha => {
-            if(db.datos[db.activo][fecha][obra]) {
-                delete db.datos[db.activo][fecha][obra];
-            }
-        });
+    if(confirm(`¿Estás seguro de borrar todos los datos de ${selectedMonth} para la obra ${obra.toUpperCase()}?`)) {
+        if(db[selectedMonth] && db[selectedMonth][obra]) {
+            delete db[selectedMonth][obra];
+            localStorage.setItem('app_prod_conectar_v3', JSON.stringify(db));
+            selectedDate = null;
+            renderApp();
+        }
     }
-    
-    guardarDB();
-    diaSeleccionado = null; 
-    renderCarga();
-    
-    btn.innerText = 'BORRAR MES COMPLETO';
-    btn.style.backgroundColor = 'var(--danger)';
-    btn.style.color = 'white';
-    confirmReset = false;
 }
-
-function toggleTheme() {
-    const isDark = document.body.classList.toggle('dark-mode');
-    localStorage.setItem('theme', isDark ? 'dark' : 'light');
-    document.getElementById('btn-theme').innerText = isDark ? '☀️' : '🌙';
-    document.getElementById('btn-theme').setAttribute('title', isDark ? 'Activar Modo Claro' : 'Activar Modo Oscuro');
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    if (localStorage.getItem('theme') === 'dark') {
-        document.body.classList.add('dark-mode');
-        document.getElementById('btn-theme').innerText = '☀️';
-        document.getElementById('btn-theme').setAttribute('title', 'Activar Modo Claro');
-    }
-    cargarSelectPeriodos();
-    renderCarga();
-});
