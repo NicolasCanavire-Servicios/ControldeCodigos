@@ -35,6 +35,7 @@ button,input,select{font:inherit;color:inherit}
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:8px}
 .cfg{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;padding:16px;margin-top:18px}
 label.f{display:flex;flex-direction:column;gap:5px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);min-width:0}
+input[aria-invalid="true"]{border-color:var(--danger);box-shadow:0 0 0 2px var(--danger)}
 input,select{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 10px;min-height:40px;width:100%;min-width:0;font-weight:500;text-transform:none;letter-spacing:0;color:var(--fg)}
 .hint{font-size:12px;color:var(--muted);text-transform:none;letter-spacing:0;font-weight:400}
 .err{color:var(--danger);font-size:12px;min-height:16px;margin-top:6px}
@@ -120,7 +121,7 @@ tfoot td{font-weight:800;border-bottom:0;background:var(--surface-2)}
     <div class="sumfoot"><span style="font-weight:700;text-transform:uppercase">Total acumulado</span><b id="totAcum">$ 0,00</b></div>
   </div>
   <div class="act">
-    <label class="f" for="operario">Nombre del operario<input id="operario" maxlength="60" autocomplete="name" placeholder="Ej: Juan Pérez"></label>
+    <label class="f" for="operario">Nombre del operario (obligatorio)<input id="operario" maxlength="60" autocomplete="name" required placeholder="Ej: Juan Pérez"></label>
     <button class="btn xl" id="btnXls" type="button">Descargar Excel</button>
   </div>
   <div class="err" id="xErr" role="alert" style="text-align:right"></div>
@@ -335,6 +336,9 @@ $('theme').addEventListener('click',function(){var n=isDark()?'light':'dark';doc
 /* ---------- Excel ---------- */
 $('btnXls').addEventListener('click',function(){
   var e=$('xErr');e.textContent='';
+  var nombre=$('operario').value.trim();
+  if(!/[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]{2}/.test(nombre)){e.textContent='Escribí tu nombre y apellido para descargar el Excel.';$('operario').setAttribute('aria-invalid','true');$('operario').focus();return;}
+  $('operario').removeAttribute('aria-invalid');
   if(!window.XLSX){e.textContent='No se pudo cargar el generador de Excel. Revisá la conexión y recargá la página.';return;}
   var f=cfg(),W=semanas(f);
   var head=['COD'];W.forEach(function(_,i){head.push('SEM '+(i+1));});head.push('TOTAL U.','MONTO $');
@@ -350,7 +354,7 @@ $('btnXls').addEventListener('click',function(){
   for(var R=1;R<rows.length;R++){var ref=XLSX.utils.encode_cell({r:R,c:last});if(ws[ref]&&typeof ws[ref].v==='number')ws[ref].z='#,##0.00';}
   ws['!cols']=head.map(function(_,i){return {wch:i===0?14:(i===last?16:10)};});
   var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Resumen Produccion');
-  var nom=$('operario').value.trim().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Za-z0-9_-]+/g,'_').replace(/^_+|_+$/g,'')||'Sin_Nombre';
+  var nom=nombre.normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Za-z0-9_-]+/g,'_').replace(/^_+|_+$/g,'');
   var fn='Resumen_'+DB.mes+'_'+nom+'.xlsx';
   var buf=XLSX.write(wb,{type:'array',bookType:'xlsx'});
   function directo(){try{XLSX.writeFile(wb,fn);}catch(x){e.textContent='No se pudo generar el archivo Excel.';}}
