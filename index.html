@@ -80,6 +80,13 @@ tfoot td{font-weight:800;border-bottom:0;background:var(--surface-2)}
 .act{display:flex;gap:12px;align-items:end;justify-content:flex-end;flex-wrap:wrap;margin-top:16px}
 .act label.f{flex:1;max-width:340px}
 .empty{padding:28px 12px;text-align:center;color:var(--muted)}
+.cons{margin-top:18px;padding:20px;max-width:640px}
+.ch{font-size:18px;font-weight:700;margin-bottom:14px}
+.cgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.res{margin-top:18px;padding:18px;border-radius:8px;background:var(--surface-2);text-align:center}
+.res .k{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.res .v{font-size:34px;font-weight:800;font-variant-numeric:tabular-nums;margin-top:4px}
+.res.ok{background:rgba(252,194,0,.16)}
 @media(prefers-reduced-motion:no-preference){.cb,.btn{transition:background .12s}}
 </style>
 
@@ -87,6 +94,7 @@ tfoot td{font-weight:800;border-bottom:0;background:var(--surface-2)}
   <div class="brand"><small>Grupo Conectar</small>Control Producción</div>
   <button class="tab" id="tabCarga" role="tab" aria-selected="true" aria-controls="vCarga" type="button">Carga diaria</button>
   <button class="tab" id="tabRes" role="tab" aria-selected="false" aria-controls="vRes" type="button">Resumen mensual</button>
+  <button class="tab" id="tabCons" role="tab" aria-selected="false" aria-controls="vCons" type="button">Consulta de precio</button>
   <button class="theme" id="theme" type="button" aria-label="Cambiar entre modo claro y oscuro">Modo oscuro</button>
 </div></header>
 
@@ -125,6 +133,16 @@ tfoot td{font-weight:800;border-bottom:0;background:var(--surface-2)}
     <button class="btn xl" id="btnXls" type="button">Descargar Excel</button>
   </div>
   <div class="err" id="xErr" role="alert" style="text-align:right"></div>
+</section>
+<section id="vCons" role="tabpanel" aria-labelledby="tabCons" hidden>
+  <div class="panel cons">
+    <h2 class="ch">Consulta de precio</h2>
+    <div class="cgrid">
+      <label class="f" for="qCat">Categoría<select id="qCat"></select></label>
+      <label class="f" for="qCod">Código<select id="qCod"></select></label>
+    </div>
+    <div class="res" id="qRes" aria-live="polite"></div>
+  </div>
 </section>
 </main>
 
@@ -325,10 +343,28 @@ $('btnBorrar').addEventListener('click',function(){
   clearTimeout(delTimer);delTimer=null;b.textContent='Borrar período completo';
   cfg().dias={};selDay=null;save();renderAll();
 });
-function setTab(t){tab=t;$('vCarga').hidden=t!=='carga';$('vRes').hidden=t!=='res';
-  $('tabCarga').setAttribute('aria-selected',t==='carga');$('tabRes').setAttribute('aria-selected',t==='res');if(t==='res')renderRes();}
+function setTab(t){tab=t;
+  [['carga','vCarga','tabCarga'],['res','vRes','tabRes'],['cons','vCons','tabCons']].forEach(function(x){
+    $(x[1]).hidden=t!==x[0];$(x[2]).setAttribute('aria-selected',t===x[0]);});
+  if(t==='res')renderRes();if(t==='cons')renderCons();}
 $('tabCarga').addEventListener('click',function(){setTab('carga');});
 $('tabRes').addEventListener('click',function(){setTab('res');});
+$('tabCons').addEventListener('click',function(){setTab('cons');});
+function renderCons(){
+  var cat=$('qCat').value,cod=$('qCod').value,r=$('qRes');clear(r);
+  if(CATS.indexOf(cat)<0||!COEF.hasOwnProperty(cod)){r.className='res';r.appendChild(el('div','Elegí la categoría y el código para ver el precio.','k'));return;}
+  r.className='res ok';
+  r.appendChild(el('div',cod+' · '+cat,'k'));
+  r.appendChild(el('div',M(precio(cat,cod)),'v'));
+}
+function initCons(){
+  var c=$('qCat'),k=$('qCod');
+  var o=el('option','Elegí una categoría');o.value='';c.appendChild(o);
+  CATS.forEach(function(x){var p=el('option',x);p.value=x;c.appendChild(p);});
+  var q=el('option','Elegí un código');q.value='';k.appendChild(q);
+  CODIGOS.forEach(function(x){var p=el('option',x[0]);p.value=x[0];k.appendChild(p);});
+  c.addEventListener('change',renderCons);k.addEventListener('change',renderCons);
+}
 function isDark(){var t=document.documentElement.getAttribute('data-theme');return t?t==='dark':window.matchMedia('(prefers-color-scheme: dark)').matches;}
 function themeLabel(){$('theme').textContent=isDark()?'Modo claro':'Modo oscuro';}
 $('theme').addEventListener('click',function(){var n=isDark()?'light':'dark';document.documentElement.setAttribute('data-theme',n);try{localStorage.setItem('cp_theme',n);}catch(e){}themeLabel();});
@@ -370,7 +406,7 @@ $('btnXls').addEventListener('click',function(){
 load();
 try{var th=localStorage.getItem('cp_theme');if(th==='dark'||th==='light')document.documentElement.setAttribute('data-theme',th);}catch(x){}
 if(!DB.mes||!okMes(DB.mes)){var h=new Date();DB.mes=h.getFullYear()+'-'+String(h.getMonth()+1).padStart(2,'0');}
-themeLabel();renderAll();
+themeLabel();initCons();renderAll();
 })();
 </script>
 
